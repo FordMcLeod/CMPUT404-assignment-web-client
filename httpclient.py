@@ -99,9 +99,9 @@ class HTTPClient(object):
         content = ""
         if args:
             content = urllib.parse.urlencode([(v,k) for v,k in args.items()])
-        
         requestHeaders = "POST {} HTTP/1.1\r\nHost: {}\r\nContent-Type:application/x-www-form-urlencoded\r\nContent-Length:{}\r\n\r\n".format(path,host,len(content))
         request = requestHeaders+content+"\r\n\r\n"
+        
         self.connect(host,port)
         self.sendall(request)
         response = self.recvall(self.socket)
