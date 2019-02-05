@@ -24,6 +24,7 @@ import re
 # you may use urllib to encode data appropriately
 import urllib.parse
 
+
 def help():
     print("httpclient.py [GET/POST] [URL]\n")
 
@@ -42,8 +43,6 @@ class HTTPClient(object):
 
     def get_code(self, data):
         response = data.split("\r\n")
-        print("in get_code:")
-        print(response[0])
         result = re.search('HTTP\/\d.*\d* (\d+)', response[0])
         code = int(result.group(1))
         return code 
@@ -76,10 +75,12 @@ class HTTPClient(object):
         # Parsing URL
         parseUrl = urllib.parse.urlparse(url)
         host = parseUrl.netloc.split(":")[0]
-        port = parseUrl.port
         path = parseUrl.path
+        port = parseUrl.port
+        if not port:
+            port = 80
 
-        request = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(path,host)
+        request = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(url,host)
         self.connect(host,port)
         self.sendall(request)
         response = self.recvall(self.socket)
@@ -97,21 +98,18 @@ class HTTPClient(object):
 
         content = ""
         if args:
-            for arg in args:
-                content+="{}={}&".format(arg,args[arg])
-            if content[-1] == "&":
-                content = content [:-1]
-        repr(content)
-        requestHeaders = "POST {} HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\n\r\n".format(path,host,len(content))
+            content = urllib.parse.urlencode([(v,k) for v,k in args.items()])
+        
+        requestHeaders = "POST {} HTTP/1.1\r\nHost: {}\r\nContent-Type:application/x-www-form-urlencoded\r\nContent-Length:{}\r\n\r\n".format(path,host,len(content))
         request = requestHeaders+content+"\r\n\r\n"
         self.connect(host,port)
         self.sendall(request)
         response = self.recvall(self.socket)
         self.close()
-        print("RESPONSE")
-        print(response)
+
         code = self.get_code(response)
         body = self.get_body(response)
+        print(body)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
