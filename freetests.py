@@ -244,7 +244,7 @@ class TestHTTPClient(unittest.TestCase):
                 'b':'bbbbbbbbbbbbbbbbbbbbbb',
                 'c':'c',
                 'd':'012345\r67890\n2321321\n\r'}
-        print("Sending POST!")
+        repr("Sending POST!")
         req = http.POST( url, args=args )
         self.assertTrue(req != None, "None Returned!")
         self.assertTrue(req.code == 200)

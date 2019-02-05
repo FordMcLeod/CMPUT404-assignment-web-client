@@ -42,7 +42,9 @@ class HTTPClient(object):
 
     def get_code(self, data):
         response = data.split("\r\n")
-        result = re.search('HTTP/\d.*\d* (\d+)', response[0])
+        print("in get_code:")
+        print(response[0])
+        result = re.search('HTTP\/\d.*\d* (\d+)', response[0])
         code = int(result.group(1))
         return code 
 
@@ -72,10 +74,10 @@ class HTTPClient(object):
 
     def GET(self, url, args=None):
         # Parsing URL
-        parseResult = urllib.parse.urlparse(url)
-        host = parseResult.netloc.split(":")[0]
-        port = parseResult.port
-        path = parseResult.path
+        parseUrl = urllib.parse.urlparse(url)
+        host = parseUrl.netloc.split(":")[0]
+        port = parseUrl.port
+        path = parseUrl.path
 
         request = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(path,host)
         self.connect(host,port)
@@ -88,8 +90,28 @@ class HTTPClient(object):
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        parseUrl = urllib.parse.urlparse(url)
+        host = parseUrl.netloc.split(":")[0]
+        port = parseUrl.port
+        path = parseUrl.path
+
+        content = ""
+        if args:
+            for arg in args:
+                content+="{}={}&".format(arg,args[arg])
+            if content[-1] == "&":
+                content = content [:-1]
+        repr(content)
+        requestHeaders = "POST {} HTTP/1.1\r\nHost: {}\r\nContent-Length: {}\r\n\r\n".format(path,host,len(content))
+        request = requestHeaders+content+"\r\n\r\n"
+        self.connect(host,port)
+        self.sendall(request)
+        response = self.recvall(self.socket)
+        self.close()
+        print("RESPONSE")
+        print(response)
+        code = self.get_code(response)
+        body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
